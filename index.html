@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBSA 商務企劃能力進階檢定實戰系統 | TONY STUDIO (v44 行銷總監終極版)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF & Canvas Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f172a', // Slate 900
+                        secondary: '#b45309', // Amber 700
+                        accent: '#0369a1', // Sky 700
+                        tbsaBlue: '#1e3a8a',
+                        bgLight: '#f8fafc',
+                        textDark: '#334155'
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        serif: ['"Noto Serif TC"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; scroll-behavior: smooth; font-weight: 400; color: #334155; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Noto Sans TC', sans-serif; font-weight: 700; }
+        
+        .gradient-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        
+        /* Modal Styles */
+        .modal { opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 9999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.98); transition: transform 0.3s ease; display: flex; flex-direction: column; max-height: 90vh; width: 100%; max-width: 1024px; background: white; border-radius: 0.75rem; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .modal.active .modal-content { transform: scale(1); }
+        .modal-body { overflow-y: auto; flex: 1; padding: 2rem; }
+        
+        /* TBSA Form Specific Styles */
+        .tbsa-form-preview { background: white; padding: 40px; border: 1px solid #e2e8f0; font-family: 'Noto Sans TC', sans-serif; min-height: 800px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; }
+        .tbsa-header { text-align: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+        .tbsa-title { font-size: 24px; font-weight: 900; color: #000; letter-spacing: 2px; }
+        .tbsa-subtitle { font-size: 14px; color: #666; margin-top: 5px; }
+        
+        .tbsa-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
+        .tbsa-table th, .tbsa-table td { border: 1px solid #000; padding: 8px; vertical-align: top; }
+        .tbsa-table th { background-color: #f3f4f6; text-align: center; font-weight: 700; color: #000; }
+        .tbsa-section-title { background-color: #e5e7eb; font-weight: 800; padding: 5px; border: 1px solid #000; text-align: center; margin-top: 10px; margin-bottom: -1px; font-size: 14px; }
+        
+        .form-input-label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem; }
+        .form-textarea { width: 100%; border: 1px solid #cbd5e1; rounded: 0.375rem; padding: 0.5rem; font-size: 0.875rem; transition: border-color 0.2s; min-height: 80px; }
+        .form-textarea:focus { border-color: #b45309; outline: none; ring: 2px solid #fed7aa; }
+
+        /* Tool Btn */
+        .tool-btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 1rem; background-color: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.95rem; color: #334155; transition: all 0.2s; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; }
+        .tool-btn:hover { background-color: #eff6ff; border-color: #3b82f6; color: #1e3a8a; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+        /* Tabs */
+        .tab-btn { padding: 12px 20px; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; transition: all 0.3s; cursor: pointer; }
+        .tab-btn:hover { color: #b45309; background-color: #fff7ed; }
+        .tab-btn.active { color: #b45309; border-bottom-color: #b45309; background-color: #fff; }
+
+        /* AI Loading */
+        @keyframes pulse-purple { 0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(147, 51, 234, 0); } }
+        .ai-generating { animation: pulse-purple 2s infinite; pointer-events: none; opacity: 0.8; cursor: not-allowed; }
+
+        /* Chatbot Styles */
+        .chat-msg { margin-bottom: 1rem; padding: 1rem; rounded-lg: 0.5rem; max-width: 85%; }
+        .chat-msg.bot { background-color: #f3f4f6; color: #1f2937; align-self: flex-start; border-left: 4px solid #7c3aed; }
+        .chat-msg.user { background-color: #eff6ff; color: #1e3a8a; align-self: flex-end; border-right: 4px solid #2563eb; margin-left: auto; }
+        .typing-indicator::after { content: '...'; animation: typing 1s infinite; }
+        @keyframes typing { 0% { content: '.'; } 33% { content: '..'; } 66% { content: '...'; } }
+
+        /* Markdown/HTML Styles for AI Content (Enhanced Readability) */
+        .ai-content-box h3 { font-size: 1.4rem; font-weight: 800; color: #b45309; margin-top: 1.5em; margin-bottom: 0.8em; border-bottom: 3px solid #fed7aa; padding-bottom: 0.3em; font-family: 'Noto Serif TC', serif; }
+        .ai-content-box h4 { font-size: 1.15rem; font-weight: 700; color: #1e3a8a; margin-top: 1.2em; margin-bottom: 0.5em; }
+        .ai-content-box ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.2em; color: #334155; }
+        .ai-content-box li { margin-bottom: 0.5em; line-height: 1.6; }
+        .ai-content-box p { margin-bottom: 1em; line-height: 1.8; text-align: justify; color: #1e293b; }
+        .ai-content-box strong { color: #0f172a; font-weight: 800; background-color: #e0f2fe; padding: 0 4px; rounded: 2px; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-white/95 backdrop-blur shadow-sm z-50 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <img src="https://i.postimg.cc/fT2sQW09/1.png" alt="TONY STUDIO Logo" class="h-10 w-auto mr-3">
+                    <span class="font-bold text-xl text-primary tracking-tight hidden md:block">| TBSA 檢定實戰系統</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-6 text-sm font-medium">
+                    <a href="#tony-profile" class="text-gray-600 hover:text-primary transition font-bold"><i class="fa-solid fa-user-tie mr-1"></i>關於 TONY 老師</a>
+                    <a href="#tbsa-workshop" class="text-secondary hover:text-amber-800 transition font-bold bg-amber-50 px-3 py-1 rounded-full">五大表單實作區</a>
+                    <a href="#theory-tools" class="text-gray-600 hover:text-primary transition">SOSTAC®工具箱</a>
+                    <button onclick="openModal('modal-api-settings')" class="text-purple-600 hover:text-purple-800 font-bold border border-purple-200 px-3 py-1 rounded-full text-xs flex items-center bg-purple-50 transition">
+                        <i class="fa-solid fa-key mr-2"></i>AI 設定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-12 gradient-header text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4 font-serif">TBSA 商務企劃能力進階檢定<br><span class="text-secondary text-2xl md:text-3xl">五大表單全攻略</span></h1>
+            <p class="text-slate-300 max-w-2xl mx-auto font-light">
+                專為學生設計的 TBSA 檢定輔助系統。結合 Tony 老師的實戰經驗與 AI 智能生成，協助您快速產出符合規範的企劃表單。
+            </p>
+        </div>
+    </section>
+
+    <!-- TONY Profile Section -->
+    <section id="tony-profile" class="py-12 bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-start gap-8">
+                <!-- Image -->
+                <div class="w-full md:w-1/4 flex flex-col items-center">
+                    <img src="https://i.postimg.cc/TPpkDFSq/TONY-lao-shi.jpg" alt="Tony Teacher" class="w-48 h-48 rounded-full object-cover shadow-2xl border-4 border-white mb-4">
+                    <h3 class="text-2xl font-bold text-primary">Tony 楊文澤 老師</h3>
+                    <p class="text-sm text-secondary font-bold">資深數位行銷科技顧問</p>
+                </div>
+                <!-- Info -->
+                <div class="w-full md:w-3/4 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <h4 class="text-lg font-bold text-primary border-b border-slate-200 pb-2 mb-2"><i class="fa-solid fa-briefcase mr-2 text-secondary"></i>現職</h4>
+                            <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                                <li>龍華科技大學 數位行銷暨跨境商務系 講師</li>
+                                <li>智策慧品牌顧問有限公司 資深數位行銷科技顧問</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <h4 class="text-lg font-bold text-primary border-b border-slate-200 pb-2 mb-2"><i class="fa-solid fa-graduation-cap mr-2 text-secondary"></i>學歷</h4>
+                            <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                                <li>台大 EMBA 商學組</li>
+                                <li>美國 Arizona State University (ASU) 互動式電腦多媒體設計</li>
+                                <li>北科大工業設計</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <h4 class="text-lg font-bold text-primary border-b border-slate-200 pb-2 mb-2"><i class="fa-solid fa-trophy mr-2 text-secondary"></i>重要經歷</h4>
+                        <ul class="text-sm text-gray-700 space-y-2">
+                            <li class="flex items-start"><span class="mr-2 text-secondary font-bold">•</span><span><strong>轉型創業：</strong>脈動心聯股份有限公司 創辦人暨執行長</span></li>
+                            <li class="flex items-start"><span class="mr-2 text-secondary font-bold">•</span><span><strong>上市公司：</strong>宏碁集團建碁AOPEN (3046) 整合營銷處處長 / 全球品牌行銷總監 / 企業發言人</span></li>
+                            <li class="flex items-start"><span class="mr-2 text-secondary font-bold">•</span><span><strong>產業公會：</strong>台灣數位看板多媒體聯盟 (DSMA) 副會長</span></li>
+                            <li class="flex items-start"><span class="mr-2 text-secondary font-bold">•</span><span><strong>專案計畫：</strong>第29屆亞太廣告年會-雲創台北 總規劃、經濟部騰龍計畫、台灣農產品生產追溯系統</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <h4 class="text-lg font-bold text-primary border-b border-slate-200 pb-2 mb-2"><i class="fa-solid fa-chalkboard-user mr-2 text-secondary"></i>專家授課經歷</h4>
+                        <div class="text-sm text-gray-700 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
+                            <p>• CPC 生產力中心 經營管理顧問師班 講師 (34/35/36/40屆)</p>
+                            <p>• CPC 培育中小企業成長創價能量 講師</p>
+                            <p>• 台大 EMBA / 長榮 EMBA 業師</p>
+                            <p>• 北科大、政大、世新 業師</p>
+                            <p>• 2021 MarTech 行銷科技行銷長認證班 講師</p>
+                            <p>• 2021/2024/2025 T大使與產業尖兵 講師</p>
+                            <p>• MarTech 行銷科技經理人培訓班講師 (第3-6屆)</p>
+                            <p>• 2025 新光人壽 AI 工具應用 企業內訓講師</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TBSA Workshop Area -->
+    <section id="tbsa-workshop" class="py-10 bg-slate-50 min-h-screen border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <!-- Global Project Settings -->
+            <div class="bg-white p-6 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row gap-4 items-end border border-gray-200">
+                <div class="flex-1 w-full">
+                    <label class="form-input-label">企劃案名稱 / 主題</label>
+                    <input type="text" id="global_project_name" class="w-full border border-gray-300 rounded p-2 focus:ring-secondary focus:border-secondary" placeholder="例如：2025 綠色生活節行銷企劃" oninput="updateAllTitles()">
+                </div>
+                <div class="flex-1 w-full">
+                    <label class="form-input-label text-red-600 font-bold">商品 / 服務名稱 (含主辦單位/預算/限制條件)</label>
+                    <input type="text" id="global_product_name" class="w-full border border-gray-300 rounded p-2 focus:ring-secondary focus:border-secondary" placeholder="例：EcoLife APP (主辦：環保局 / 預算：500萬 / 限制：需含線下活動)" oninput="updateAllTitles()">
+                </div>
+                <div class="w-full md:w-auto">
+                    <button onclick="openModal('modal-api-settings')" class="w-full bg-purple-600 text-white px-6 py-2 rounded font-bold hover:bg-purple-700 transition shadow-sm"><i class="fa-solid fa-robot mr-2"></i>檢查 AI 設定</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex overflow-x-auto border-b border-gray-200 mb-6 sticky top-16 bg-slate-50 z-40 pb-2">
+                <button class="tab-btn active" onclick="switchTab(1)">STEP 1: 情報/概念分析</button>
+                <button class="tab-btn" onclick="switchTab(2)">STEP 2: 現況分析與目標</button>
+                <button class="tab-btn" onclick="switchTab(3)">STEP 3: STP 市場策略</button>
+                <button class="tab-btn" onclick="switchTab(4)">STEP 4: 戰術與溝通</button>
+                <button class="tab-btn" onclick="switchTab(5)">STEP 5: 一頁企劃書</button>
+            </div>
+
+            <!-- Workspace -->
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- LEFT: Input Panel -->
+                <div class="w-full lg:w-1/3 space-y-6 overflow-y-auto max-h-[120vh] p-1 custom-scrollbar">
+                    
+                    <!-- AI Assistant Panel -->
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200 mb-6 shadow-sm">
+                        <h4 class="text-purple-800 font-bold mb-2 flex items-center"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>AI 智能助教 (行銷總監模式)</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-ai-generate" onclick="generateCurrentForm()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded shadow hover:shadow-lg transition text-xs flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-pen-nib mb-1 text-base"></i>生成此表單初稿
+                            </button>
+                            <button onclick="startOralExam()" class="bg-white border-2 border-purple-600 text-purple-700 font-bold py-3 rounded shadow hover:bg-purple-50 transition text-xs flex flex-col items-center justify-center">
+                                <i class="fa-solid fa-user-tie mb-1 text-base"></i>模擬口試 (3關)
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-purple-500 mt-2 text-center">*AI 將依據最新市場趨勢 (2024-25) 與 Step 1 內容進行專業連動規劃。</p>
+                    </div>
+
+                    <!-- Input Forms (Content kept consistent) -->
+                    <div id="input-form-1" class="form-section block">
+                        <h3 class="text-lg font-bold text-primary mb-4 border-l-4 border-secondary pl-2">Step 1: 企劃情報/概念分析</h3>
+                        <div class="space-y-4">
+                            <div><label class="form-input-label">企劃目的</label><textarea id="f1_purpose" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                            <div><label class="form-input-label">標題 / 副標題</label><input type="text" id="f1_title" class="form-textarea h-10" oninput="renderForm1()"></div>
+                            <div class="bg-orange-50 p-3 rounded border border-orange-200">
+                                <label class="form-input-label text-orange-800"><i class="fa-solid fa-binoculars mr-1"></i>競爭情報分析 (Competitor Analysis)</label>
+                                <textarea id="f1_competitor" class="form-textarea h-24" oninput="renderForm1()" placeholder="請分析主要競爭對手的優劣勢..."></textarea>
+                            </div>
+                            <div class="bg-gray-100 p-3 rounded"><h5 class="font-bold text-sm mb-2">外部環境 (PEST)</h5>
+                                <div class="space-y-2">
+                                    <div><label class="form-input-label">政治/法律 (Political/Legal)</label><textarea id="f1_ext_pol" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                                    <div><label class="form-input-label">經濟/消費 (Economic)</label><textarea id="f1_ext_eco" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                                    <div><label class="form-input-label">社會/人口 (Social)</label><textarea id="f1_ext_soc" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                                    <div><label class="form-input-label">科技/技術 (Tech)</label><textarea id="f1_ext_tec" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                                </div>
+                            </div>
+                            <div><label class="form-input-label">消費者情報分析</label><textarea id="f1_consumer" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                            <div><label class="form-input-label">產業情報分析</label><textarea id="f1_industry" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                            <div><label class="form-input-label">內部情報/資源盤點</label><textarea id="f1_internal" class="form-textarea" oninput="renderForm1()"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div id="input-form-2" class="form-section hidden">
+                        <h3 class="text-lg font-bold text-primary mb-4 border-l-4 border-secondary pl-2">Step 2: 現況分析與策略目標</h3>
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-3 rounded"><h5 class="font-bold text-sm mb-2 text-blue-800">SWOT 分析</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div><label class="form-input-label">S (優勢)</label><textarea id="f2_s" class="form-textarea h-24" oninput="renderForm2()"></textarea></div>
+                                    <div><label class="form-input-label">W (劣勢)</label><textarea id="f2_w" class="form-textarea h-24" oninput="renderForm2()"></textarea></div>
+                                    <div><label class="form-input-label">O (機會)</label><textarea id="f2_o" class="form-textarea h-24" oninput="renderForm2()"></textarea></div>
+                                    <div><label class="form-input-label">T (威脅)</label><textarea id="f2_t" class="form-textarea h-24" oninput="renderForm2()"></textarea></div>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50 p-3 rounded">
+                                <h5 class="font-bold text-sm mb-2 text-amber-800">對策辦法 (Countermeasures) - TOWS矩陣</h5>
+                                <div class="grid grid-cols-1 gap-2">
+                                    <div><label class="form-input-label">SO 策略 (乘勢)</label><textarea id="f2_so" class="form-textarea h-20" oninput="renderForm2()"></textarea></div>
+                                    <div><label class="form-input-label">WO 策略 (轉型)</label><textarea id="f2_wo" class="form-textarea h-20" oninput="renderForm2()"></textarea></div>
+                                    <div><label class="form-input-label">ST 策略 (防禦)</label><textarea id="f2_st" class="form-textarea h-20" oninput="renderForm2()"></textarea></div>
+                                    <div><label class="form-input-label">WT 策略 (撤退)</label><textarea id="f2_wt" class="form-textarea h-20" oninput="renderForm2()"></textarea></div>
+                                </div>
+                                <div class="mt-3 border-t border-amber-200 pt-2">
+                                    <label class="form-input-label text-red-700">綜合對策辦法總結 (Summary)</label>
+                                    <textarea id="f2_countermeasures" class="form-textarea h-24" oninput="renderForm2()" placeholder="綜合思考能滿足策略議題，並解決關鍵問題的具體對策..."></textarea>
+                                </div>
+                            </div>
+                            <hr>
+                            <div><label class="form-input-label">策略目標</label><textarea id="f2_strat_goal" class="form-textarea" oninput="renderForm2()"></textarea></div>
+                            <div><label class="form-input-label">成果目標</label><textarea id="f2_outcome_goal" class="form-textarea" oninput="renderForm2()"></textarea></div>
+                            <div><label class="form-input-label">關鍵障礙</label><textarea id="f2_obstacle" class="form-textarea" oninput="renderForm2()"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div id="input-form-3" class="form-section hidden">
+                        <h3 class="text-lg font-bold text-primary mb-4 border-l-4 border-secondary pl-2">Step 3: STP 市場策略</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-100 p-3 rounded">
+                                <h5 class="font-bold text-sm mb-2">市場區隔 (Segmentation)</h5>
+                                <div class="mb-3 border-b border-gray-300 pb-2">
+                                    <span class="text-xs font-bold text-primary">區隔 A</span>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        <input type="text" id="f3_seg_a_name" placeholder="名稱 (如: 上班族)" class="form-textarea h-8" oninput="renderForm3()">
+                                        <input type="text" id="f3_seg_a_var" placeholder="區隔變數" class="form-textarea h-8" oninput="renderForm3()">
+                                        <textarea id="f3_seg_a_jtbd" placeholder="顧客任務 (JTBD)" class="form-textarea h-16 col-span-2" oninput="renderForm3()"></textarea>
+                                        <textarea id="f3_seg_a_demo" placeholder="人口統計特徵" class="form-textarea h-16 col-span-2" oninput="renderForm3()"></textarea>
+                                    </div>
+                                </div>
+                                <div class="mb-3 border-b border-gray-300 pb-2">
+                                    <span class="text-xs font-bold text-primary">區隔 B</span>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        <input type="text" id="f3_seg_b_name" placeholder="名稱" class="form-textarea h-8" oninput="renderForm3()">
+                                        <input type="text" id="f3_seg_b_var" placeholder="區隔變數" class="form-textarea h-8" oninput="renderForm3()">
+                                        <textarea id="f3_seg_b_jtbd" placeholder="顧客任務 (JTBD)" class="form-textarea h-16 col-span-2" oninput="renderForm3()"></textarea>
+                                        <textarea id="f3_seg_b_demo" placeholder="人口統計特徵" class="form-textarea h-16 col-span-2" oninput="renderForm3()"></textarea>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-primary">區隔 C</span>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        <input type="text" id="f3_seg_c_name" placeholder="名稱" class="form-textarea h-8" oninput="renderForm3()">
+                                        <input type="text" id="f3_seg_c_var" placeholder="區隔變數" class="form-textarea h-8" oninput="renderForm3()">
+                                        <textarea id="f3_seg_c_jtbd" placeholder="顧客任務 (JTBD)" class="form-textarea h-16 col-span-2" oninput="renderForm3()"></textarea>
+                                        <textarea id="f3_seg_c_demo" placeholder="人口統計特徵" class="form-textarea h-16 col-span-2" oninput="renderForm3()"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div><label class="form-input-label">目標市場 (Targeting)</label><textarea id="f3_target" class="form-textarea" oninput="renderForm3()"></textarea></div>
+                            <div><label class="form-input-label">產品/服務功能特色</label><textarea id="f3_features" class="form-textarea" oninput="renderForm3()"></textarea></div>
+                            <div class="bg-blue-50 p-3 rounded">
+                                <label class="form-input-label text-blue-800 mb-2 font-bold"><i class="fa-solid fa-crosshairs mr-1"></i>市場定位 (Positioning)</label>
+                                <p class="text-xs text-blue-600 mb-2">請依據「解決痛苦」與「創造利益」矩陣進行定位。</p>
+                                <div class="grid grid-cols-2 gap-2 mb-2">
+                                    <div><label class="text-xs font-bold text-gray-500">解決痛苦 (Pain Resolution)</label><textarea id="f3_positioning_pain" class="form-textarea h-16" oninput="renderForm3()" placeholder="此產品能解決目標客群什麼核心痛點？"></textarea></div>
+                                    <div><label class="text-xs font-bold text-gray-500">創造利益 (Benefit Creation)</label><textarea id="f3_positioning_gain" class="form-textarea h-16" oninput="renderForm3()" placeholder="此產品能為目標客群創造什麼獨特利益？"></textarea></div>
+                                </div>
+                                <label class="form-input-label text-blue-800">定位聲明 (Statement)</label>
+                                <textarea id="f3_statement" placeholder="針對[目標市場], [產品]是提供[解決痛點/創造利益]的[品項]..." class="form-textarea" oninput="renderForm3()"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="input-form-4" class="form-section hidden">
+                        <h3 class="text-lg font-bold text-primary mb-4 border-l-4 border-secondary pl-2">Step 4: 行銷戰術與溝通活動</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-100 p-3 rounded"><h5 class="font-bold text-sm mb-2">行銷戰術設計 (7Ps)</h5>
+                                <div class="space-y-2">
+                                    <div><label class="form-input-label">產品 (Product)</label><textarea id="f4_product" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                    <div><label class="form-input-label">價格 (Price)</label><textarea id="f4_price" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                    <div><label class="form-input-label">通路 (Place)</label><textarea id="f4_place" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                    <div><label class="form-input-label">推廣 (Promotion)</label><textarea id="f4_promotion" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div><label class="form-input-label">人員 (People)</label><textarea id="f4_people" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                        <div><label class="form-input-label">服務流程 (Process)</label><textarea id="f4_process" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                        <div><label class="form-input-label">有形展示 (Physical)</label><textarea id="f4_physical" class="form-textarea h-16" oninput="renderForm4()"></textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50 p-3 rounded">
+                                <h5 class="font-bold text-sm mb-2 text-amber-800">行銷溝通活動 (AIDAS)</h5>
+                                <div id="aidas-inputs" class="space-y-4">
+                                    <!-- A -->
+                                    <div class="border-b border-amber-200 pb-2"><span class="text-xs font-bold text-secondary">1. 引起注意 (Attention)</span><input type="text" id="f4_a_act" placeholder="活動內容" class="form-textarea h-8 mt-1" oninput="renderForm4()"><div class="grid grid-cols-2 gap-2 mt-1"><input type="text" id="f4_a_goal" placeholder="目標" class="form-textarea h-8" oninput="renderForm4()"><input type="text" id="f4_a_budget" placeholder="預算" class="form-textarea h-8" oninput="renderForm4()"></div></div>
+                                    <!-- I -->
+                                    <div class="border-b border-amber-200 pb-2"><span class="text-xs font-bold text-secondary">2. 增加興趣 (Interest)</span><input type="text" id="f4_i_act" placeholder="活動內容" class="form-textarea h-8 mt-1" oninput="renderForm4()"><div class="grid grid-cols-2 gap-2 mt-1"><input type="text" id="f4_i_goal" placeholder="目標" class="form-textarea h-8" oninput="renderForm4()"><input type="text" id="f4_i_budget" placeholder="預算" class="form-textarea h-8" oninput="renderForm4()"></div></div>
+                                    <!-- D -->
+                                    <div class="border-b border-amber-200 pb-2"><span class="text-xs font-bold text-secondary">3. 刺激慾望 (Desire)</span><input type="text" id="f4_d_act" placeholder="活動內容" class="form-textarea h-8 mt-1" oninput="renderForm4()"><div class="grid grid-cols-2 gap-2 mt-1"><input type="text" id="f4_d_goal" placeholder="目標" class="form-textarea h-8" oninput="renderForm4()"><input type="text" id="f4_d_budget" placeholder="預算" class="form-textarea h-8" oninput="renderForm4()"></div></div>
+                                    <!-- A -->
+                                    <div class="border-b border-amber-200 pb-2"><span class="text-xs font-bold text-secondary">4. 促使行動 (Action)</span><input type="text" id="f4_act_act" placeholder="活動內容" class="form-textarea h-8 mt-1" oninput="renderForm4()"><div class="grid grid-cols-2 gap-2 mt-1"><input type="text" id="f4_act_goal" placeholder="目標" class="form-textarea h-8" oninput="renderForm4()"><input type="text" id="f4_act_budget" placeholder="預算" class="form-textarea h-8" oninput="renderForm4()"></div></div>
+                                    <!-- S -->
+                                    <div><span class="text-xs font-bold text-secondary">5. 提高滿意 (Satisfaction)</span><input type="text" id="f4_s_act" placeholder="活動內容" class="form-textarea h-8 mt-1" oninput="renderForm4()"><div class="grid grid-cols-2 gap-2 mt-1"><input type="text" id="f4_s_goal" placeholder="目標" class="form-textarea h-8" oninput="renderForm4()"><input type="text" id="f4_s_budget" placeholder="預算" class="form-textarea h-8" oninput="renderForm4()"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="input-form-5" class="form-section hidden">
+                        <h3 class="text-lg font-bold text-primary mb-4 border-l-4 border-secondary pl-2">Step 5: 一頁企劃書</h3>
+                        <div class="space-y-4">
+                            <div><label class="form-input-label">1. 目的與效益 (Why/Evaluate)</label><textarea id="f5_why" class="form-textarea h-32" oninput="renderForm5()"></textarea></div>
+                            <div><label class="form-input-label">2. 內容要點 (What/Whom)</label><textarea id="f5_what" class="form-textarea h-32" oninput="renderForm5()"></textarea></div>
+                            <div><label class="form-input-label">3. 實施方式 (How/Where/When)</label><textarea id="f5_how" class="form-textarea h-32" oninput="renderForm5()"></textarea></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="form-input-label">4. 執行團隊 (Who)</label><textarea id="f5_who" class="form-textarea h-24" oninput="renderForm5()"></textarea></div>
+                                <div><label class="form-input-label">5. 所需經費 (How Much)</label><textarea id="f5_cost" class="form-textarea h-24" oninput="renderForm5()"></textarea></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Preview Panel -->
+                <div class="w-full lg:w-2/3">
+                     <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest"><i class="fa-solid fa-eye mr-2"></i>表單即時預覽</h3>
+                        <div class="space-x-2">
+                            <button onclick="exportCurrentWord()" class="px-3 py-1 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-file-word mr-1"></i>匯出 Word</button>
+                            <button onclick="exportCurrentPDF()" class="px-3 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 transition"><i class="fa-solid fa-file-pdf mr-1"></i>匯出 PDF</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview Container -->
+                    <div id="preview-container" class="bg-gray-200 p-4 rounded overflow-auto h-[120vh]">
+                        <!-- Previews -->
+                        <div id="preview-form-1" class="tbsa-form-preview hidden">
+                            <div class="tbsa-header"><div class="text-xs text-gray-500 mb-2">商業企劃方法論工具表單</div><div class="tbsa-title">企劃情報/概念分析表</div><div class="tbsa-subtitle">用途：將企劃目的，透過內外情報分析，確立企劃案的核心</div></div>
+                            <div class="mb-4 flex justify-between items-start"><div><strong>企劃案名稱：</strong><span class="preview-project-name"></span></div></div>
+                            <table class="tbsa-table">
+                                <tr><th width="15%">企劃目的</th><td width="35%"><div id="p1_purpose" class="whitespace-pre-wrap"></div></td><th width="15%">標題/副標題</th><td width="35%"><div id="p1_title" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr><th class="bg-orange-50 text-orange-900">競爭情報分析</th><td colspan="3"><div id="p1_competitor" class="whitespace-pre-wrap text-sm"></div></td></tr>
+                                <tr><td colspan="4" class="bg-gray-100 font-bold text-center">外部大環境/時代趨勢情報分析 (PEST)</td></tr>
+                                <tr><th width="25%">政治/法律趨勢</th><td width="25%"><div id="p1_pol" class="text-xs whitespace-pre-wrap"></div></td><th width="25%">經濟/消費趨勢</th><td width="25%"><div id="p1_eco" class="text-xs whitespace-pre-wrap"></div></td></tr>
+                                <tr><th>社會/人口趨勢</th><td><div id="p1_soc" class="text-xs whitespace-pre-wrap"></div></td><th>科技/技術趨勢</th><td><div id="p1_tec" class="text-xs whitespace-pre-wrap"></div></td></tr>
+                                <tr><td colspan="4" class="bg-gray-100 font-bold text-center">消費者與產業情報</td></tr>
+                                <tr><th>消費者情報分析</th><td><div id="p1_consumer" class="whitespace-pre-wrap"></div></td><th>產業情報分析</th><td><div id="p1_industry" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr><th>內部情報/資源盤點</th><td colspan="3"><div id="p1_internal" class="whitespace-pre-wrap"></div></td></tr>
+                            </table>
+                        </div>
+                        <div id="preview-form-2" class="tbsa-form-preview hidden">
+                            <div class="tbsa-header"><div class="text-xs text-gray-500 mb-2">商業企劃方法論工具表單</div><div class="tbsa-title">現況分析與策略目標設定表</div></div>
+                            <div class="mb-4"><strong>企劃案名稱：</strong><span class="preview-project-name"></span></div>
+                            <table class="tbsa-table">
+                                <tr><th width="10%" class="bg-white border-none"></th><th width="45%">外部因素 (External)</th><th width="45%">對策辦法 (Countermeasures)</th></tr>
+                                <tr><th rowspan="2" class="align-middle">內部因素</th><td class="bg-blue-50"><strong>S (優勢)</strong><br><div id="p2_s" class="text-xs whitespace-pre-wrap"></div></td><td class="bg-blue-50"><strong>SO 策略 (乘勢)</strong><br><div id="p2_so" class="text-xs whitespace-pre-wrap"></div></td></tr>
+                                <tr><td class="bg-orange-50"><strong>W (劣勢)</strong><br><div id="p2_w" class="text-xs whitespace-pre-wrap"></div></td><td class="bg-orange-50"><strong>WO 策略 (轉型)</strong><br><div id="p2_wo" class="text-xs whitespace-pre-wrap"></div></td></tr>
+                                <tr><th rowspan="2" class="align-middle">外部因素</th><td class="bg-green-50"><strong>O (機會)</strong><br><div id="p2_o" class="text-xs whitespace-pre-wrap"></div></td><td class="bg-white"><strong>ST 策略 (防禦)</strong><br><div id="p2_st" class="text-xs whitespace-pre-wrap"></div></td></tr>
+                                <tr><td class="bg-red-50"><strong>T (威脅)</strong><br><div id="p2_t" class="text-xs whitespace-pre-wrap"></div></td><td class="bg-white"><strong>WT 策略 (撤退)</strong><br><div id="p2_wt" class="text-xs whitespace-pre-wrap"></div></td></tr>
+                                <tr><th colspan="3" class="bg-amber-100 text-amber-900">對策辦法總結</th></tr><tr><td colspan="3"><div id="p2_countermeasures" class="whitespace-pre-wrap text-sm min-h-[60px]"></div></td></tr>
+                            </table>
+                            <table class="tbsa-table"><tr><th width="33%">策略目標</th><th width="33%">成果目標</th><th width="33%">關鍵障礙</th></tr><tr><td height="100"><div id="p2_strat_goal" class="whitespace-pre-wrap"></div></td><td><div id="p2_outcome_goal" class="whitespace-pre-wrap"></div></td><td><div id="p2_obstacle" class="whitespace-pre-wrap"></div></td></tr></table>
+                        </div>
+                        <div id="preview-form-3" class="tbsa-form-preview hidden">
+                            <div class="tbsa-header"><div class="text-xs text-gray-500 mb-2">商業企劃方法論工具表單</div><div class="tbsa-title">STP 市場策略設計表</div></div>
+                            <div class="mb-2"><strong>商品/服務名稱：</strong><span class="preview-product-name"></span></div>
+                            <div class="tbsa-section-title">市場區隔 (Segmentation)</div>
+                            <table class="tbsa-table">
+                                <tr><th width="10%">分析項目</th><th width="30%">市場區隔 A<br><span id="p3_seg_a_name" class="text-xs font-normal"></span></th><th width="30%">市場區隔 B<br><span id="p3_seg_b_name" class="text-xs font-normal"></span></th><th width="30%">市場區隔 C<br><span id="p3_seg_c_name" class="text-xs font-normal"></span></th></tr>
+                                <tr><th>區隔變數</th><td><div id="p3_seg_a_var"></div></td><td><div id="p3_seg_b_var"></div></td><td><div id="p3_seg_c_var"></div></td></tr>
+                                <tr><th>顧客任務(JTBD)</th><td><div id="p3_seg_a_jtbd" class="text-xs"></div></td><td><div id="p3_seg_b_jtbd" class="text-xs"></div></td><td><div id="p3_seg_c_jtbd" class="text-xs"></div></td></tr>
+                                <tr><th>人口統計</th><td><div id="p3_seg_a_demo" class="text-xs"></div></td><td><div id="p3_seg_b_demo" class="text-xs"></div></td><td><div id="p3_seg_c_demo" class="text-xs"></div></td></tr>
+                            </table>
+                            <table class="tbsa-table">
+                                <tr><th width="20%">目標市場 (Targeting)</th><td width="80%"><div id="p3_target" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr><th>產品功能/特色</th><td><div id="p3_features" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr><th>市場定位 (矩陣)</th><td><div class="grid grid-cols-2 gap-4 text-xs mb-2"><div class="bg-red-50 p-2 rounded"><strong>解決痛苦:</strong><br><div id="p3_positioning_pain"></div></div><div class="bg-green-50 p-2 rounded"><strong>創造利益:</strong><br><div id="p3_positioning_gain"></div></div></div></td></tr>
+                                <tr><th>定位聲明</th><td><div id="p3_statement" class="whitespace-pre-wrap text-blue-800 font-medium"></div></td></tr>
+                            </table>
+                        </div>
+                        <div id="preview-form-4" class="tbsa-form-preview hidden">
+                            <div class="tbsa-header"><div class="text-xs text-gray-500 mb-2">商業企劃方法論工具表單</div><div class="tbsa-title">行銷戰術及溝通活動設計表</div></div>
+                            <div class="tbsa-section-title">行銷戰術設計 (7Ps)</div>
+                            <table class="tbsa-table">
+                                <tr><th width="15%">產品</th><td width="35%"><div id="p4_product" class="text-xs"></div></td><th width="15%">推廣</th><td width="35%"><div id="p4_promotion" class="text-xs"></div></td></tr>
+                                <tr><th>價格</th><td><div id="p4_price" class="text-xs"></div></td><th>人員</th><td><div id="p4_people" class="text-xs"></div></td></tr>
+                                <tr><th>通路</th><td><div id="p4_place" class="text-xs"></div></td><th>流程</th><td><div id="p4_process" class="text-xs"></div></td></tr>
+                                <tr><th>有形展示</th><td colspan="3"><div id="p4_physical" class="text-xs"></div></td></tr>
+                            </table>
+                            <div class="tbsa-section-title">行銷活動設計 (AIDAS)</div>
+                            <table class="tbsa-table">
+                                <tr><th>心理程序</th><th>活動</th><th>目標</th><th>預算</th><th>備註</th></tr>
+                                <tr><th>引起注意</th><td><div id="p4_a_act"></div></td><td><div id="p4_a_goal"></div></td><td><div id="p4_a_budget"></div></td><td></td></tr>
+                                <tr><th>增加興趣</th><td><div id="p4_i_act"></div></td><td><div id="p4_i_goal"></div></td><td><div id="p4_i_budget"></div></td><td></td></tr>
+                                <tr><th>刺激慾望</th><td><div id="p4_d_act"></div></td><td><div id="p4_d_goal"></div></td><td><div id="p4_d_budget"></div></td><td></td></tr>
+                                <tr><th>促使行動</th><td><div id="p4_act_act"></div></td><td><div id="p4_act_goal"></div></td><td><div id="p4_act_budget"></div></td><td></td></tr>
+                                <tr><th>提高滿意</th><td><div id="p4_s_act"></div></td><td><div id="p4_s_goal"></div></td><td><div id="p4_s_budget"></div></td><td></td></tr>
+                            </table>
+                        </div>
+                        <div id="preview-form-5" class="tbsa-form-preview hidden">
+                            <div class="tbsa-header"><div class="text-xs text-gray-500 mb-2">商業企劃方法論工具表單</div><div class="tbsa-title">一頁企劃書</div></div>
+                            <div class="mb-4 text-xl font-bold text-center text-secondary border-b pb-2"><span class="preview-project-name"></span></div>
+                            <table class="tbsa-table" style="height: 600px;">
+                                <tr style="height: 20%;"><th width="15%" class="bg-slate-100">1. 目的與效益</th><td width="85%"><div id="p5_why" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr style="height: 25%;"><th class="bg-slate-100">2. 內容要點</th><td><div id="p5_what" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr style="height: 25%;"><th class="bg-slate-100">3. 實施方式</th><td><div id="p5_how" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr style="height: 15%;"><th class="bg-slate-100">4. 執行團隊</th><td><div id="p5_who" class="whitespace-pre-wrap"></div></td></tr>
+                                <tr style="height: 15%;"><th class="bg-slate-100">5. 所需經費</th><td class="text-red-700 font-bold"><div id="p5_cost" class="whitespace-pre-wrap"></div></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Theory Tools Section (Fixed & Optimized) -->
+    <section id="theory-tools" class="py-12 bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-bold text-center mb-8 text-primary">SOSTAC® 企劃理論工具箱</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="cursor-pointer tool-btn text-xs flex flex-col items-center justify-center gap-2 h-24 hover:-translate-y-1" onclick="openModal('modal-external')">
+                    <i class="fa-solid fa-earth-americas text-2xl text-secondary"></i><span>外部環境</span>
+                </div>
+                <div class="cursor-pointer tool-btn text-xs flex flex-col items-center justify-center gap-2 h-24 hover:-translate-y-1" onclick="openModal('modal-internal')">
+                    <i class="fa-solid fa-building text-2xl text-secondary"></i><span>內部資源</span>
+                </div>
+                <div class="cursor-pointer tool-btn text-xs flex flex-col items-center justify-center gap-2 h-24 hover:-translate-y-1" onclick="openModal('modal-stp')">
+                    <i class="fa-solid fa-layer-group text-2xl text-secondary"></i><span>STP 定位</span>
+                </div>
+                <div class="cursor-pointer tool-btn text-xs flex flex-col items-center justify-center gap-2 h-24 hover:-translate-y-1" onclick="openModal('modal-7p')">
+                    <i class="fa-solid fa-cubes-stacked text-2xl text-secondary"></i><span>7P 戰術</span>
+                </div>
+                <div class="cursor-pointer tool-btn text-xs flex flex-col items-center justify-center gap-2 h-24 hover:-translate-y-1" onclick="openModal('modal-action-pro')">
+                    <i class="fa-solid fa-list-check text-2xl text-secondary"></i><span>甘特圖</span>
+                </div>
+                <div class="cursor-pointer tool-btn text-xs flex flex-col items-center justify-center gap-2 h-24 hover:-translate-y-1" onclick="openModal('modal-control-pro')">
+                    <i class="fa-solid fa-chart-pie text-2xl text-secondary"></i><span>KPI 績效</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Oral Exam Modal -->
+    <div id="modal-oral-exam" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-2xl h-[80vh] rounded-xl relative flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="font-bold text-lg text-primary flex items-center"><i class="fa-solid fa-user-tie mr-2 text-purple-700"></i> TBSA 模擬口試官</h3>
+                <div class="flex items-center gap-3">
+                    <span id="exam-progress" class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded hidden">進度: 1/3</span>
+                    <button onclick="closeModal('modal-oral-exam')" class="text-gray-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <div class="chat-msg bot">
+                    <p>你好，我是 TBSA 檢定口試委員。我將針對您的企劃案進行 3 個階段的提問。請準備好後點擊開始。</p>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-white rounded-b-xl">
+                <div id="exam-controls" class="text-center">
+                    <button onclick="initOralExam()" class="bg-purple-600 text-white font-bold py-2 px-6 rounded-full hover:bg-purple-700 transition shadow-lg">
+                        <i class="fa-solid fa-play mr-2"></i>開始口試 (3 Questions)
+                    </button>
+                </div>
+                <div id="exam-input-area" class="hidden flex gap-2">
+                    <input type="text" id="exam-user-input" class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none" placeholder="請輸入您的回答..." onkeypress="if(event.key==='Enter') sendReplyToExaminer()">
+                    <button onclick="sendReplyToExaminer()" id="btn-send-reply" class="bg-purple-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-700 transition"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals (Theory - FULLY RESTORED & OPTIMIZED) -->
+    <div id="modal-api-settings" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-md p-8 rounded-xl relative">
+            <div class="modal-body">
+                <button onclick="closeModal('modal-api-settings')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
+                <h2 class="text-xl font-bold text-primary mb-4 flex items-center"><i class="fa-solid fa-robot mr-2 text-purple-600"></i> AI 智能設定</h2>
+                <p class="text-sm text-gray-600 mb-4">請輸入您的 Google Gemini API Key。</p>
+                <div class="mb-4"><label class="block text-sm font-bold text-gray-700 mb-2">Gemini API Key</label><input type="password" id="gemini-api-key" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-purple-500" placeholder="Paste Key here..."></div>
+                <button onclick="saveApiKey()" class="w-full bg-purple-600 text-white font-bold py-2 rounded hover:bg-purple-700 transition">儲存設定</button>
+                <p class="text-xs text-gray-400 mt-4 text-center">沒有 Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-purple-600 hover:underline">Google AI Studio</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-external" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-xl shadow-2xl relative">
+            <button onclick="closeModal('modal-external')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl transition z-50"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body">
+                <h2 class="text-2xl font-bold text-primary mb-4">外部環境掃描 (External Analysis)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 border-b-2 border-primary pb-2 text-primary">1. PESTLE 宏觀環境</h3>
+                        <ul class="space-y-3 text-sm text-gray-700"><li><strong>Political:</strong> 政治穩定度、稅收。</li><li><strong>Economic:</strong> GDP、通膨。</li><li><strong>Social:</strong> 人口、生活型態。</li><li><strong>Technological:</strong> AI、自動化。</li><li><strong>Legal:</strong> 法規。</li><li><strong>Environmental:</strong> ESG。</li></ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 border-b-2 border-primary pb-2 text-primary">2. Porter's 5 Forces 產業競爭</h3>
+                        <ul class="space-y-3 text-sm text-gray-700"><li>供應商議價力</li><li>購買者議價力</li><li>新進入者威脅</li><li>替代品威脅</li><li>現有競爭者</li></ul>
+                    </div>
+                </div>
+                <div class="border-t pt-4 bg-purple-50 p-4 rounded-lg">
+                    <button onclick="callGeminiExplain('PESTLE & 5 Forces', 'ai-content-ext')" class="text-white bg-purple-600 font-bold hover:bg-purple-700 px-4 py-2 rounded transition flex items-center mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成深度解析與案例</button>
+                    <div id="ai-content-ext" class="ai-content-box mt-3 markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-internal" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-3xl rounded-xl relative">
+            <button onclick="closeModal('modal-internal')" class="absolute top-4 right-4 text-2xl z-50"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body">
+                <h2 class="text-2xl font-bold text-primary mb-4">內部資源盤點 (RBV)</h2>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="bg-blue-50 p-4 rounded border border-blue-100"><h3 class="font-bold text-blue-900 mb-2">有形資源 (Tangible)</h3><p class="text-sm">財務、實體資產、人力。</p></div>
+                    <div class="bg-blue-50 p-4 rounded border border-blue-100"><h3 class="font-bold text-blue-900 mb-2">無形資源 (Intangible)</h3><p class="text-sm">品牌、技術專利、文化。</p></div>
+                </div>
+                <div class="border-t pt-4 bg-purple-50 p-4 rounded-lg">
+                    <button onclick="callGeminiExplain('RBV 資源基礎觀點', 'ai-content-internal')" class="text-white bg-purple-600 font-bold hover:bg-purple-700 px-4 py-2 rounded transition flex items-center mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成深度解析與案例</button>
+                    <div id="ai-content-internal" class="ai-content-box mt-3 markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-stp" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-xl shadow-2xl relative">
+            <button onclick="closeModal('modal-stp')" class="absolute top-4 right-4 text-2xl z-50"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body">
+                <h2 class="text-2xl font-bold text-primary mb-6">STP 市場定位策略</h2>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100"><h3 class="font-bold text-blue-800">S (Segmentation)</h3><p class="text-sm">地理、人口、心理、行為。</p></div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-200"><h3 class="font-bold text-blue-600">T (Targeting)</h3><p class="text-sm">選擇目標市場。</p></div>
+                    <div class="bg-gray-900 p-4 rounded-xl text-white"><h3 class="font-bold text-white">P (Positioning)</h3><p class="text-sm">痛點 vs 利益 矩陣定位。</p></div>
+                </div>
+                <div class="border-t pt-4 bg-purple-50 p-4 rounded-lg mt-6">
+                    <button onclick="callGeminiExplain('STP 行銷策略', 'ai-content-stp')" class="text-white bg-purple-600 font-bold hover:bg-purple-700 px-4 py-2 rounded transition flex items-center mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成深度解析與案例</button>
+                    <div id="ai-content-stp" class="ai-content-box mt-3 markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-7p" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-xl relative">
+            <button onclick="closeModal('modal-7p')" class="absolute top-4 right-4 text-2xl z-50"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body">
+                <h2 class="text-2xl font-bold text-primary mb-6">7P 行銷組合</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div><h3 class="font-bold border-b pb-2 text-gray-700">4P (Product)</h3><ul class="text-sm list-disc pl-4"><li>Product</li><li>Price</li><li>Place</li><li>Promotion</li></ul></div>
+                    <div><h3 class="font-bold border-b pb-2 text-secondary">3P (Service)</h3><ul class="text-sm list-disc pl-4"><li>People</li><li>Process</li><li>Physical Evidence</li></ul></div>
+                </div>
+                <div class="border-t pt-4 bg-purple-50 p-4 rounded-lg">
+                    <button onclick="callGeminiExplain('7P 服務行銷組合', 'ai-content-7p')" class="text-white bg-purple-600 font-bold hover:bg-purple-700 px-4 py-2 rounded transition flex items-center mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成深度解析與案例</button>
+                    <div id="ai-content-7p" class="ai-content-box mt-3 markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-action-pro" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-xl relative">
+            <button onclick="closeModal('modal-action-pro')" class="absolute top-4 right-4 text-2xl z-50"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body">
+                <h2 class="text-2xl font-bold mb-4 text-primary">行動計畫與專案管理</h2>
+                <div class="space-y-6"><div><h3 class="font-bold text-lg text-secondary mb-2">鐵三角 (Triple Constraint)</h3><p class="text-sm">範疇 (Scope)、時間 (Time)、成本 (Cost)。</p></div></div>
+                <div class="border-t pt-4 bg-purple-50 p-4 rounded-lg mt-6">
+                    <button onclick="callGeminiExplain('行銷專案管理與甘特圖', 'ai-content-action')" class="text-white bg-purple-600 font-bold hover:bg-purple-700 px-4 py-2 rounded transition flex items-center mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成深度解析與案例</button>
+                    <div id="ai-content-action" class="ai-content-box mt-3 markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-control-pro" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-4xl rounded-xl relative">
+            <button onclick="closeModal('modal-control-pro')" class="absolute top-4 right-4 text-2xl z-50"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body">
+                <h2 class="text-2xl font-bold mb-4 text-primary">績效管理 (Control)</h2>
+                <div class="mb-6"><h3 class="font-bold text-lg mb-2">平衡計分卡 (BSC)</h3><ul class="text-sm list-disc pl-4"><li>財務</li><li>顧客</li><li>內部流程</li><li>學習成長</li></ul></div>
+                <div class="border-t pt-4 bg-purple-50 p-4 rounded-lg">
+                    <button onclick="callGeminiExplain('行銷績效評估 (KPI & BSC)', 'ai-content-control')" class="text-white bg-purple-600 font-bold hover:bg-purple-700 px-4 py-2 rounded transition flex items-center mb-2"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>生成深度解析與案例</button>
+                    <div id="ai-content-control" class="ai-content-box mt-3 markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 text-white py-8 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-slate-400">&copy; 2025 TONY STUDIO. 本教材由 TONY STUDIO 楊文澤老師設計. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Core Variables ---
+        let currentTab = 1;
+
+        // --- Core Functions ---
+        function openModal(id) { document.getElementById(id)?.classList.add('active'); document.body.style.overflow='hidden'; }
+        function closeModal(id) { document.getElementById(id)?.classList.remove('active'); document.body.style.overflow=''; }
+        window.onclick = (e) => { if(e.target.classList.contains('modal')) closeModal(e.target.id); }
+
+        function switchTab(tabIndex) {
+            currentTab = tabIndex;
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                if(idx + 1 === tabIndex) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            document.querySelectorAll('.form-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`input-form-${tabIndex}`).classList.remove('hidden');
+            document.querySelectorAll('.tbsa-form-preview').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`preview-form-${tabIndex}`).classList.remove('hidden');
+        }
+
+        function updateAllTitles() {
+            const projName = document.getElementById('global_project_name').value || '(未設定企劃名稱)';
+            const prodName = document.getElementById('global_product_name').value || '(未設定商品名稱)';
+            document.querySelectorAll('.preview-project-name').forEach(el => el.innerText = projName);
+            document.querySelectorAll('.preview-product-name').forEach(el => el.innerText = prodName);
+        }
+
+        // --- Render Functions ---
+        function renderForm1() {
+            const ids = ['f1_purpose', 'f1_title', 'f1_competitor', 'f1_ext_pol', 'f1_ext_eco', 'f1_ext_soc', 'f1_ext_tec', 'f1_consumer', 'f1_industry', 'f1_internal'];
+            const pIds = ['p1_purpose', 'p1_title', 'p1_competitor', 'p1_pol', 'p1_eco', 'p1_soc', 'p1_tec', 'p1_consumer', 'p1_industry', 'p1_internal'];
+            ids.forEach((id, i) => { const el = document.getElementById(id); if(el) document.getElementById(pIds[i]).innerText = el.value; });
+        }
+        function renderForm2() {
+            const ids = ['f2_s', 'f2_w', 'f2_o', 'f2_t', 'f2_so', 'f2_wo', 'f2_st', 'f2_wt', 'f2_countermeasures', 'f2_strat_goal', 'f2_outcome_goal', 'f2_obstacle'];
+            const pIds = ['p2_s', 'p2_w', 'p2_o', 'p2_t', 'p2_so', 'p2_wo', 'p2_st', 'p2_wt', 'p2_countermeasures', 'p2_strat_goal', 'p2_outcome_goal', 'p2_obstacle'];
+            ids.forEach((id, i) => document.getElementById(pIds[i]).innerText = document.getElementById(id).value);
+        }
+        function renderForm3() {
+            const ids = ['f3_seg_a_name', 'f3_seg_a_var', 'f3_seg_a_jtbd', 'f3_seg_a_demo', 'f3_seg_b_name', 'f3_seg_b_var', 'f3_seg_b_jtbd', 'f3_seg_b_demo', 'f3_seg_c_name', 'f3_seg_c_var', 'f3_seg_c_jtbd', 'f3_seg_c_demo', 'f3_target', 'f3_features', 'f3_positioning_pain', 'f3_positioning_gain', 'f3_statement'];
+            const pIds = ['p3_seg_a_name', 'p3_seg_a_var', 'p3_seg_a_jtbd', 'p3_seg_a_demo', 'p3_seg_b_name', 'p3_seg_b_var', 'p3_seg_b_jtbd', 'p3_seg_b_demo', 'p3_seg_c_name', 'p3_seg_c_var', 'p3_seg_c_jtbd', 'p3_seg_c_demo', 'p3_target', 'p3_features', 'p3_positioning_pain', 'p3_positioning_gain', 'p3_statement'];
+            ids.forEach((id, i) => document.getElementById(pIds[i]).innerText = document.getElementById(id).value);
+        }
+        function renderForm4() {
+            const p7 = ['product', 'price', 'place', 'promotion', 'people', 'process', 'physical'];
+            p7.forEach(k => document.getElementById(`p4_${k}`).innerText = document.getElementById(`f4_${k}`).value);
+            const aidas = ['a', 'i', 'd', 'act', 's']; const cols = ['act', 'goal', 'budget'];
+            aidas.forEach(row => { cols.forEach(col => { document.getElementById(`p4_${row}_${col}`).innerText = document.getElementById(`f4_${row}_${col}`).value; }); });
+        }
+        function renderForm5() {
+            const ids = ['f5_why', 'f5_what', 'f5_how', 'f5_who', 'f5_cost'];
+            const pIds = ['p5_why', 'p5_what', 'p5_how', 'p5_who', 'p5_cost'];
+            ids.forEach((id, i) => document.getElementById(pIds[i]).innerText = document.getElementById(id).value);
+        }
+
+        // --- Helper: Get Step 1 Context ---
+        function getStep1Context() {
+            const purpose = document.getElementById('f1_purpose').value || '';
+            const competitor = document.getElementById('f1_competitor').value || '';
+            const consumer = document.getElementById('f1_consumer').value || '';
+            
+            if(!purpose && !competitor) return ''; // No context yet
+
+            return `
+            [Context from Step 1 Analysis]
+            Project Goal: ${purpose}
+            Competitor Analysis: ${competitor}
+            Consumer Insights: ${consumer}
+            (Ensure consistency with the above analysis in your response.)
+            `;
+        }
+
+        // --- AI API ---
+        function saveApiKey() {
+            const key = document.getElementById('gemini-api-key').value;
+            if(key) { localStorage.setItem('gemini_api_key', key); alert('API Key Saved!'); closeModal('modal-api-settings'); }
+        }
+        window.addEventListener('load', () => { 
+            const k=localStorage.getItem('gemini_api_key'); 
+            if(k) document.getElementById('gemini-api-key').value=k; 
+            updateAllTitles();
+            renderForm1(); renderForm2(); renderForm3(); renderForm4(); renderForm5();
+            switchTab(1);
+        });
+
+        async function callGeminiAPI(prompt, forceJson = true) {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if(!apiKey) { alert('請先輸入 API Key'); openModal('modal-api-settings'); return null; }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            if(forceJson) payload.generationConfig = { responseMimeType: "application/json" };
+            
+            try {
+                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if(!res.ok) throw new Error('API Error');
+                const data = await res.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text;
+            } catch(e) { alert(e.message); return null; }
+        }
+
+        // Explain Modal Content
+        async function callGeminiExplain(topic, outputId) {
+            const btn = document.querySelector(`button[onclick="callGeminiExplain('${topic}', '${outputId}')"]`);
+            if(!btn) return;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>AI 思考中...';
+            btn.classList.add('ai-generating'); btn.disabled = true;
+            const div = document.getElementById(outputId);
+            div.innerHTML = '<p class="text-gray-500 animate-pulse">正在生成深度解析與案例...</p>';
+            try {
+                const apiKey = localStorage.getItem('gemini_api_key');
+                if(!apiKey) { alert('請先輸入 API Key'); openModal('modal-api-settings'); return; }
+                
+                // Optimized Prompt for Teaching
+                const prompt = `你是 TONY 老師，一位擁有 20 年經驗的行銷總監與資深顧問。請深入講解 '${topic}' 這個行銷理論。
+                
+                Format Requirements:
+                1. Use structured HTML tags: <h3> for section titles, <h4> for subsections, <p> for paragraphs, <ul>/<li> for lists.
+                2. Do NOT use markdown code blocks. Return raw HTML.
+                3. Output MUST be in Traditional Chinese (繁體中文).
+                
+                Content Structure:
+                1. <h3>理論精髓 (Deep Dive)</h3>: Define the concept clearly.
+                2. <h3>策略意涵 (Strategic Value)</h3>: Why is it critical for business?
+                3. <h3>實戰案例 (Real-world Case)</h3>: Use a modern, specific example (e.g., Tesla, Netflix, Gogoro) to illustrate.`;
+
+                const result = await callGeminiAPI(prompt, false); 
+                if (result) div.innerHTML = result.replace(/```html/g, '').replace(/```/g, '').trim();
+            } catch (error) { div.innerHTML = '<p class="text-red-500">發生錯誤。</p>'; } 
+            finally { btn.innerHTML = originalText; btn.classList.remove('ai-generating'); btn.disabled = false; }
+        }
+
+        function cleanJSON(text) {
+            try { return JSON.parse(text); } catch (e) {
+                try {
+                    const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+                    if (jsonBlockMatch) return JSON.parse(jsonBlockMatch[1]);
+                    const start = text.indexOf('{'); const end = text.lastIndexOf('}');
+                    if (start !== -1 && end !== -1) return JSON.parse(text.substring(start, end + 1));
+                } catch(e2) { console.error(e2); return null; }
+            }
+        }
+
+        async function generateCurrentForm() {
+            const project = document.getElementById('global_project_name').value;
+            const productInfo = document.getElementById('global_product_name').value;
+            
+            if(!project) { alert("請先填寫企劃案名稱！"); return; }
+            const btn = document.getElementById('btn-ai-generate');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 生成中...';
+            btn.classList.add('ai-generating');
+
+            // Get Context from Step 1 for consistency
+            const step1Context = getStep1Context();
+            const basePersona = `You are TONY, a Marketing Director with 20 years of experience. You MUST use LATEST market trends (2024-2025) and specific data. Do not use generic filler text.
+            Project: ${project}
+            Product/Service Details & Constraints: ${productInfo}
+            ${step1Context}
+            Output MUST be in Traditional Chinese (繁體中文).`;
+
+            let prompt = "";
+            let handler = null;
+            
+            if (currentTab === 1) {
+                prompt = `${basePersona}
+                Task: Generate TBSA Form 1 (Concept Analysis).
+                Return strictly valid JSON: {"purpose":"Purpose & Benefits", "title":"Creative Title", "competitor":"Competitor Analysis (Strengths/Weaknesses)", "ext_pol":"Political", "ext_eco":"Economic", "ext_soc":"Social", "ext_tec":"Tech", "consumer":"Consumer Insights", "industry":"Industry Trends", "internal":"Internal Resources"}`;
+                handler = (j) => { document.getElementById('f1_purpose').value=j.purpose; document.getElementById('f1_title').value=j.title; document.getElementById('f1_competitor').value=j.competitor; document.getElementById('f1_ext_pol').value=j.ext_pol; document.getElementById('f1_ext_eco').value=j.ext_eco; document.getElementById('f1_ext_soc').value=j.ext_soc; document.getElementById('f1_ext_tec').value=j.ext_tec; document.getElementById('f1_consumer').value=j.consumer; document.getElementById('f1_industry').value=j.industry; document.getElementById('f1_internal').value=j.internal; renderForm1(); };
+            } else if (currentTab === 2) {
+                prompt = `${basePersona}
+                Task: Generate SWOT & TOWS Strategy based on the context.
+                Return strictly valid JSON: {"s":"Strengths", "w":"Weaknesses", "o":"Opportunities", "t":"Threats", "so":"SO Strategy", "wo":"WO Strategy", "st":"ST Strategy", "wt":"WT Strategy", "countermeasures":"Summary of Countermeasures (Specific actions)", "strat_goal":"Strategic Goal", "outcome_goal":"Outcome Goal (KPIs)", "obstacle":"Key Obstacles"}`;
+                handler = (j) => { document.getElementById('f2_s').value=j.s; document.getElementById('f2_w').value=j.w; document.getElementById('f2_o').value=j.o; document.getElementById('f2_t').value=j.t; document.getElementById('f2_so').value=j.so; document.getElementById('f2_wo').value=j.wo; document.getElementById('f2_st').value=j.st; document.getElementById('f2_wt').value=j.wt; document.getElementById('f2_countermeasures').value=j.countermeasures; document.getElementById('f2_strat_goal').value=j.strat_goal; document.getElementById('f2_outcome_goal').value=j.outcome_goal; document.getElementById('f2_obstacle').value=j.obstacle; renderForm2(); };
+            } else if (currentTab === 3) {
+                prompt = `${basePersona}
+                Task: Generate STP Strategy. Ensure consistency with Step 1 Analysis.
+                Return strictly valid JSON: { "seg_a_name":"", "seg_a_var":"", "seg_a_jtbd":"", "seg_a_demo":"", "seg_b_name":"", "seg_b_var":"", "seg_b_jtbd":"", "seg_b_demo":"", "seg_c_name":"", "seg_c_var":"", "seg_c_jtbd":"", "seg_c_demo":"", "target":"Target Market Selection", "features":"Product Features", "positioning_pain":"Pain Points Solved", "positioning_gain":"Gains Created", "statement":"Positioning Statement" }`;
+                handler = (j) => { Object.keys(j).forEach(k => { const el=document.getElementById('f3_'+k); if(el) el.value=j[k]; }); renderForm3(); };
+            } else if (currentTab === 4) {
+                prompt = `${basePersona}
+                Task: Generate 7P Tactics & AIDAS Activities. Ensure consistency with positioning.
+                Return strictly valid JSON: { "product":"", "price":"", "place":"", "promotion":"", "people":"", "process":"", "physical":"", "a_act":"", "a_goal":"", "a_budget":"", "i_act":"", "i_goal":"", "i_budget":"", "d_act":"", "d_goal":"", "d_budget":"", "act_act":"", "act_goal":"", "act_budget":"", "s_act":"", "s_goal":"", "s_budget":"" }`;
+                handler = (j) => { Object.keys(j).forEach(k => { const el=document.getElementById('f4_'+k); if(el) el.value=j[k]; }); renderForm4(); };
+            } else if (currentTab === 5) {
+                prompt = `${basePersona}
+                Task: Generate One Page Proposal (Form 5). Summarize all previous steps.
+                Return strictly valid JSON: {"why":"Objectives & Benefits", "what":"Content Points", "how":"Implementation Method", "who":"Execution Team", "cost":"Budget Estimation"} `;
+                handler = (j) => { document.getElementById('f5_why').value=j.why; document.getElementById('f5_what').value=j.what; document.getElementById('f5_how').value=j.how; document.getElementById('f5_who').value=j.who; document.getElementById('f5_cost').value=j.cost; renderForm5(); };
+            }
+
+            try {
+                const result = await callGeminiAPI(prompt, true);
+                if(result && handler) {
+                    const json = cleanJSON(result);
+                    if(json) handler(json);
+                }
+            } catch (e) { alert('生成失敗'); } 
+            finally { btn.innerHTML = originalText; btn.classList.remove('ai-generating'); }
+        }
+
+        // --- Export Functions ---
+        async function exportCurrentPDF() {
+            if (!window.jspdf) { alert("PDF 模組載入失敗"); return; }
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById(`preview-form-${currentTab}`);
+            element.style.background = 'white'; element.classList.remove('hidden');
+            try {
+                const canvas = await html2canvas(element, { scale: 2 });
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+                pdf.save(`TBSA_Form_${currentTab}.pdf`);
+            } catch (e) { alert("匯出失敗"); }
+        }
+
+        function exportCurrentWord() {
+            const element = document.getElementById(`preview-form-${currentTab}`);
+            const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title><style>body{font-family:'Microsoft JhengHei';} table{border-collapse:collapse;width:100%;} td,th{border:1px solid #000;padding:8px;} th{background-color:#f3f4f6;}</style></head><body>`;
+            const postHtml = "</body></html>";
+            const blob = new Blob(['\ufeff', preHtml + element.innerHTML + postHtml], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url; link.download = `TBSA_Form_${currentTab}.doc`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        // --- MULTI-TURN ORAL EXAM LOGIC ---
+        function startOralExam() { openModal('modal-oral-exam'); }
+
+        function initOralExam() {
+            const element = document.getElementById(`preview-form-${currentTab}`);
+            const formContent = element.innerText;
+            const formName = document.querySelector(`.tab-btn.active`).innerText;
+
+            document.getElementById('exam-controls').classList.add('hidden');
+            document.getElementById('exam-input-area').classList.remove('hidden');
+            document.getElementById('exam-progress').classList.remove('hidden');
+            
+            // Initialize Context
+            window.examContext = {
+                formName: formName,
+                lastQuestion: "",
+                questionCount: 1, // Start at Q1
+                content: formContent.substring(0, 3000)
+            };
+            
+            updateProgressDisplay();
+            addChatMsg('bot', '正在閱讀您的企劃書並準備第一題...', true);
+
+            const prompt = `你現在是 TBSA 商務企劃檢定的嚴格口試委員。
+            考生填寫了「${formName}」。內容摘要：${window.examContext.content}
+            
+            任務：
+            1. 針對內容邏輯提出第 1 個尖銳問題 (Question 1)。
+            2. 問題要簡短有力。
+            3. 直接輸出問題，不要有開場白。
+            4. Output MUST be in Traditional Chinese (繁體中文).`;
+
+            callGeminiAPI(prompt, false).then(response => {
+                removeTyping();
+                if(response) {
+                    addChatMsg('bot', response);
+                    window.examContext.lastQuestion = response;
+                }
+            });
+        }
+
+        function sendReplyToExaminer() {
+            const input = document.getElementById('exam-user-input');
+            const btn = document.getElementById('btn-send-reply');
+            const userText = input.value.trim();
+            if(!userText) return;
+
+            addChatMsg('user', userText);
+            input.value = '';
+            input.disabled = true; btn.disabled = true; // Lock input
+            addChatMsg('bot', '考官正在評估並準備追問...', true);
+
+            const count = window.examContext.questionCount;
+            let prompt = "";
+
+            if (count < 3) {
+                // Not yet final question, ask next
+                prompt = `情境：TBSA 口試現場 (第 ${count} 題，共 3 題)。
+                考官問：${window.examContext.lastQuestion}
+                考生答：${userText}
+                
+                任務：
+                1. 簡短點評考生的回答 (優點/缺點)。
+                2. 根據回答漏洞或新觀點，提出第 ${count + 1} 個追問問題 (Question ${count + 1})。
+                格式：[點評] \n\n [下一題追問]
+                Output MUST be in Traditional Chinese (繁體中文).`;
+            } else {
+                // Final Question Answered
+                prompt = `情境：TBSA 口試現場 (第 3 題結束)。
+                考官問：${window.examContext.lastQuestion}
+                考生答：${userText}
+                
+                任務：
+                1. 點評最後一題的回答。
+                2. 給出「總結評語」與「是否通過建議」。
+                3. 感謝考生，結束口試。
+                Output MUST be in Traditional Chinese (繁體中文).`;
+            }
+
+            callGeminiAPI(prompt, false).then(response => {
+                removeTyping();
+                if(response) {
+                    addChatMsg('bot', response);
+                    window.examContext.lastQuestion = response;
+                    
+                    if (count < 3) {
+                        window.examContext.questionCount++;
+                        updateProgressDisplay();
+                        input.disabled = false; btn.disabled = false; // Unlock
+                        input.focus();
+                    } else {
+                        // End of exam
+                        document.getElementById('exam-input-area').innerHTML = '<div class="text-center text-gray-500 w-full py-2">口試結束，請根據建議修改表單。</div>';
+                    }
+                }
+            });
+        }
+
+        function updateProgressDisplay() {
+            const el = document.getElementById('exam-progress');
+            el.innerText = `口試進度: 第 ${window.examContext.questionCount} / 3 題`;
+        }
+
+        function addChatMsg(role, text, isTyping = false) {
+            const container = document.getElementById('chat-history');
+            const div = document.createElement('div');
+            div.className = `chat-msg ${role} ${isTyping ? 'typing-indicator' : ''}`;
+            if (!isTyping) div.innerHTML = marked.parse(text); else div.innerText = text;
+            container.appendChild(div); container.scrollTop = container.scrollHeight;
+        }
+        function removeTyping() { document.querySelectorAll('.typing-indicator').forEach(el => el.remove()); }
+    </script>
+</body>
+</html>
