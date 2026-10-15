@@ -260,6 +260,9 @@
                     <a href="#tony-profile" class="hidden lg:inline-block text-gray-600 hover:text-primary transition font-bold"><i class="fa-solid fa-user-tie mr-1"></i>關於 TONY 老師</a>
                     <a href="#tbsa-workshop" class="hidden md:inline-block text-secondary hover:text-amber-800 transition font-bold bg-amber-50 px-3 py-1 rounded-full">五大表單實作區</a>
                     <a href="#theory-tools" class="hidden lg:inline-block text-gray-600 hover:text-primary transition">SOSTAC®工具箱</a>
+                    <button onclick="openCloudPlansModal()" class="text-sky-700 hover:text-sky-900 font-bold border border-sky-200 px-3 py-1 rounded-full text-xs flex items-center bg-sky-50 transition shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-down mr-1.5"></i>雲端歷史企劃
+                    </button>
                     <button onclick="openModal('modal-api-settings')" class="text-purple-600 hover:text-purple-800 font-bold border border-purple-200 px-3 py-1 rounded-full text-xs flex items-center bg-purple-50 transition">
                         <i class="fa-solid fa-key mr-1.5"></i>AI 設定
                     </button>
@@ -368,8 +371,29 @@
                         </div>
                         <input type="text" id="global_product_name" class="w-full border border-gray-300 rounded p-2 focus:ring-secondary focus:border-secondary" placeholder="例：EcoLife APP (主辦：環保局 / 預算：500萬 / 限制：需含線下活動)" oninput="updateAllTitles()">
                     </div>
-                    <div class="w-full md:w-auto md:pt-5">
-                        <button onclick="openModal('modal-api-settings')" class="w-full bg-purple-600 text-white px-6 py-2 rounded font-bold hover:bg-purple-700 transition shadow-sm"><i class="fa-solid fa-robot mr-2"></i>檢查 AI 設定</button>
+                    <div class="w-full md:w-auto md:pt-5 flex flex-wrap gap-2">
+                        <button id="btn-save-cloud" onclick="savePlanToCloud()" class="flex-1 md:flex-initial bg-emerald-600 text-white px-4 py-2 rounded font-bold hover:bg-emerald-700 transition shadow-sm text-sm flex items-center justify-center whitespace-nowrap">
+                            <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>儲存至雲端
+                        </button>
+                        <button onclick="openCloudPlansModal()" class="flex-1 md:flex-initial bg-sky-600 text-white px-4 py-2 rounded font-bold hover:bg-sky-700 transition shadow-sm text-sm flex items-center justify-center whitespace-nowrap">
+                            <i class="fa-solid fa-clock-rotate-left mr-1.5"></i>歷史企劃查詢 (<span id="cloud-plan-count-badge">0</span>)
+                        </button>
+                        <button onclick="startNewPlanBlank()" class="bg-slate-200 text-slate-700 px-3 py-2 rounded font-bold hover:bg-slate-300 transition shadow-sm text-sm flex items-center justify-center whitespace-nowrap" title="清空目前表單並開新企劃">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Currently Loaded Cloud Plan Status Bar -->
+                <div id="current-cloud-status-bar" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-lg text-xs flex flex-wrap justify-between items-center gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-bolt text-emerald-600"></i>
+                        <span>目前編輯雲端版本：<strong id="current-cloud-plan-label" class="underline"></strong></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="savePlanToCloud(true)" class="bg-white hover:bg-emerald-100 text-emerald-700 border border-emerald-300 px-2.5 py-1 rounded font-bold transition">
+                            <i class="fa-solid fa-copy mr-1"></i>另存為新版本
+                        </button>
                     </div>
                 </div>
 
@@ -978,6 +1002,61 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- 4. 雲端企劃案歷史查詢與管理 Modal -->
+    <!-- ========================================== -->
+    <div id="modal-cloud-plans" class="modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-white w-full max-w-5xl rounded-xl relative flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="p-5 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3 gradient-header text-white rounded-t-xl">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-cloud-arrow-down text-2xl text-sky-400"></i>
+                    <div>
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            雲端企劃案歷史資料庫 (Cloud Workspace)
+                            <span id="cloud-admin-view-badge" class="hidden text-[11px] bg-amber-500 text-slate-950 font-extrabold px-2 py-0.5 rounded-full">管理員可切換全站檢視</span>
+                        </h2>
+                        <p class="text-xs text-slate-300">隨時查詢、回溯載入您儲存過的五大表單完整企劃資料，或管理刪除舊有紀錄</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="savePlanToCloud()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> 儲存目前表單
+                    </button>
+                    <button onclick="loadCloudPlansList()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                        <i class="fa-solid fa-rotate"></i> 重新整理
+                    </button>
+                    <button onclick="closeModal('modal-cloud-plans')" class="text-slate-300 hover:text-red-400 text-2xl ml-2 transition"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <!-- Filter & Search Bar -->
+            <div class="p-4 bg-slate-100 border-b border-slate-200 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+                <div class="flex flex-wrap items-center gap-2 flex-1">
+                    <div class="relative flex-1 min-w-[220px]">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="cloud-plan-search" oninput="renderCloudPlansList()" placeholder="搜尋企劃案名稱、商品服務、標題或內容關鍵字..." class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-sky-600 bg-white">
+                    </div>
+                    <select id="cloud-plan-scope" onchange="loadCloudPlansList()" class="hidden border border-amber-400 bg-amber-50 text-amber-900 font-bold rounded-lg px-3 py-1.5 text-xs focus:outline-none">
+                        <option value="mine">只顯示我的企劃案</option>
+                        <option value="all">🌟 檢視全站所有學員雲端企劃 (管理員專屬)</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between md:justify-end gap-2">
+                    <span id="cloud-plans-summary-text" class="text-xs font-bold text-slate-600">共 0 筆雲端紀錄</span>
+                    <button id="btn-delete-all-cloud-plans" onclick="deleteAllMyCloudPlans()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> 清空我的全部紀錄
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plans List Body -->
+            <div id="cloud-plans-list-body" class="modal-body bg-slate-50 space-y-3">
+                <div class="text-center py-12 text-slate-400 text-sm">載入雲端資料中...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK & Full-Stack SaaS Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1320,10 +1399,345 @@
             }
             if (currentMemberProfile.role === 'admin' || isCreator) {
                 adminBtn.classList.remove('hidden');
+                document.getElementById('cloud-admin-view-badge')?.classList.remove('hidden');
+                document.getElementById('cloud-plan-scope')?.classList.remove('hidden');
             } else {
                 adminBtn.classList.add('hidden');
+                document.getElementById('cloud-admin-view-badge')?.classList.add('hidden');
+                document.getElementById('cloud-plan-scope')?.classList.add('hidden');
             }
+
+            // 登入後自動同步讀取雲端企劃案數量
+            await window.loadCloudPlansList(true);
         });
+
+        // ==========================================
+        // 雲端企劃案儲存、歷史查詢與管理刪除系統 (Cloud CRUD)
+        // ==========================================
+        const ALL_FORM_FIELD_IDS = [
+            'global_project_name', 'global_product_name',
+            // Step 1
+            'f1_purpose', 'f1_title', 'f1_competitor', 'f1_ext_pol', 'f1_ext_eco', 'f1_ext_soc', 'f1_ext_tec', 'f1_consumer', 'f1_industry', 'f1_internal',
+            // Step 2
+            'f2_s', 'f2_w', 'f2_o', 'f2_t', 'f2_so', 'f2_wo', 'f2_st', 'f2_wt', 'f2_countermeasures', 'f2_strat_goal', 'f2_outcome_goal', 'f2_obstacle',
+            // Step 3
+            'f3_seg_a_name', 'f3_seg_a_var', 'f3_seg_a_jtbd', 'f3_seg_a_demo',
+            'f3_seg_b_name', 'f3_seg_b_var', 'f3_seg_b_jtbd', 'f3_seg_b_demo',
+            'f3_seg_c_name', 'f3_seg_c_var', 'f3_seg_c_jtbd', 'f3_seg_c_demo',
+            'f3_target', 'f3_features', 'f3_positioning_pain', 'f3_positioning_gain', 'f3_statement',
+            // Step 4
+            'f4_product', 'f4_price', 'f4_place', 'f4_promotion', 'f4_people', 'f4_process', 'f4_physical',
+            'f4_a_act', 'f4_a_goal', 'f4_a_budget',
+            'f4_i_act', 'f4_i_goal', 'f4_i_budget',
+            'f4_d_act', 'f4_d_goal', 'f4_d_budget',
+            'f4_act_act', 'f4_act_goal', 'f4_act_budget',
+            'f4_s_act', 'f4_s_goal', 'f4_s_budget',
+            // Step 5
+            'f5_why', 'f5_what', 'f5_how', 'f5_who', 'f5_cost'
+        ];
+
+        let currentLoadedCloudPlanId = null;
+        let cloudPlansCache = [];
+
+        function collectCurrentFormValues() {
+            const data = {};
+            ALL_FORM_FIELD_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                data[id] = el ? el.value : '';
+            });
+            return data;
+        }
+
+        function applyFormValuesToUI(formData) {
+            ALL_FORM_FIELD_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = (formData && formData[id] !== undefined) ? formData[id] : '';
+            });
+            window.updateAllTitles();
+            window.renderForm1();
+            window.renderForm2();
+            window.renderForm3();
+            window.renderForm4();
+            window.renderForm5();
+        }
+
+        function updateCurrentCloudStatusBar(planId, projectName, updatedAtFormatted) {
+            const bar = document.getElementById('current-cloud-status-bar');
+            const label = document.getElementById('current-cloud-plan-label');
+            if (!bar || !label) return;
+            if (planId) {
+                currentLoadedCloudPlanId = planId;
+                bar.classList.remove('hidden');
+                label.innerText = `${projectName} (最後儲存：${updatedAtFormatted})`;
+            } else {
+                currentLoadedCloudPlanId = null;
+                bar.classList.add('hidden');
+                label.innerText = '';
+            }
+        }
+
+        // 開新空白企劃表單
+        window.startNewPlanBlank = function() {
+            applyFormValuesToUI({});
+            if (window.clearAllUploadedFiles) window.clearAllUploadedFiles();
+            updateCurrentCloudStatusBar(null);
+            showToast("已清空表單，您可以開始撰寫新企劃案！", "info");
+        };
+
+        // 儲存企劃案至雲端 Firestore (支援覆蓋更新或另存新版本)
+        window.savePlanToCloud = async function(forceNew = false) {
+            const user = auth.currentUser;
+            if (!user) {
+                showToast("請先登入會員後再儲存至雲端", "error");
+                return;
+            }
+
+            const projectName = document.getElementById('global_project_name').value.trim();
+            const productName = document.getElementById('global_product_name').value.trim();
+
+            if (!projectName) {
+                showToast("請先輸入「企劃案名稱 / 主題」再儲存至雲端！", "error");
+                document.getElementById('global_project_name').focus();
+                return;
+            }
+
+            const saveBtn = document.getElementById('btn-save-cloud');
+            const origHtml = saveBtn ? saveBtn.innerHTML : '';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>雲端同步中...';
+            }
+
+            try {
+                const nowIso = new Date().toISOString();
+                const nowFormatted = new Date().toLocaleString('zh-TW', { hour12: false });
+                const planId = (!forceNew && currentLoadedCloudPlanId)
+                    ? currentLoadedCloudPlanId
+                    : ('plan_' + user.uid.substring(0, 6) + '_' + Date.now());
+
+                const formValues = collectCurrentFormValues();
+                // 儲存純文字類型的附件名稱與內容摘要(避免超過 Firestore 1MB 單文件上限)
+                const attachmentMeta = (window.uploadedFiles || []).map(f => ({
+                    name: f.name,
+                    size: f.size,
+                    mimeType: f.mimeType,
+                    isText: !!f.isText,
+                    textContent: f.isText && f.textContent ? f.textContent.substring(0, 15000) : null
+                }));
+
+                const planDoc = {
+                    planId: planId,
+                    uid: user.uid,
+                    userEmail: user.email || '',
+                    userName: currentMemberProfile?.realName || user.displayName || user.email || '會員',
+                    projectName: projectName,
+                    productName: productName,
+                    formData: formValues,
+                    attachmentsMeta: attachmentMeta,
+                    updatedAt: nowIso,
+                    updatedAtFormatted: nowFormatted
+                };
+
+                if (forceNew || !currentLoadedCloudPlanId) {
+                    planDoc.createdAt = nowIso;
+                }
+
+                await setDoc(doc(db, "tbsa_plans", planId), planDoc, { merge: true });
+                updateCurrentCloudStatusBar(planId, projectName, nowFormatted);
+                await window.recordUserActivity(`儲存雲端企劃案：《${projectName}》`);
+                await window.loadCloudPlansList(true);
+                showToast(`已成功儲存《${projectName}》至雲端資料庫！`, "success");
+            } catch (err) {
+                console.error("雲端儲存失敗:", err);
+                showToast("雲端儲存失敗：" + (err.message || "請確認網路或權限設定"), "error");
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = origHtml;
+                }
+            }
+        };
+
+        // 開啟雲端歷史查詢 Modal
+        window.openCloudPlansModal = async function() {
+            openModal('modal-cloud-plans');
+            await window.loadCloudPlansList(false);
+        };
+
+        // 從雲端讀取歷史企劃案列表
+        window.loadCloudPlansList = async function(silent = false) {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const listBody = document.getElementById('cloud-plans-list-body');
+            if (!silent && listBody) {
+                listBody.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i>正在從 Firebase 雲端載入企劃案歷史資料...</div>`;
+            }
+
+            try {
+                const snap = await getDocs(collection(db, "tbsa_plans"));
+                const allPlans = [];
+                snap.forEach(d => allPlans.push(d.data()));
+
+                const isAdmin = currentMemberProfile?.role === 'admin' || (user.email || '').toLowerCase() === CREATOR_EMAIL.toLowerCase();
+                const scopeSelect = document.getElementById('cloud-plan-scope');
+                const scope = (isAdmin && scopeSelect) ? scopeSelect.value : 'mine';
+
+                // 計算自己的雲端企劃數量並更新徽章
+                const myPlansCount = allPlans.filter(p => p.uid === user.uid).length;
+                const badgeEl = document.getElementById('cloud-plan-count-badge');
+                if (badgeEl) badgeEl.innerText = myPlansCount;
+
+                if (scope === 'all' && isAdmin) {
+                    cloudPlansCache = allPlans;
+                } else {
+                    cloudPlansCache = allPlans.filter(p => p.uid === user.uid);
+                }
+
+                // 依照最後更新時間排序 (最新在前)
+                cloudPlansCache.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+                if (!silent) {
+                    window.renderCloudPlansList();
+                }
+            } catch (err) {
+                console.warn("讀取雲端企劃列表失敗:", err);
+                if (!silent && listBody) {
+                    listBody.innerHTML = `<div class="text-center py-10 text-red-500 text-xs">讀取雲端資料時發生錯誤：${err.message}</div>`;
+                }
+            }
+        };
+
+        // 渲染雲端歷史企劃列表 (含即時關鍵字過濾)
+        window.renderCloudPlansList = function() {
+            const listBody = document.getElementById('cloud-plans-list-body');
+            const summaryEl = document.getElementById('cloud-plans-summary-text');
+            const keyword = (document.getElementById('cloud-plan-search')?.value || '').trim().toLowerCase();
+            if (!listBody) return;
+
+            const filtered = cloudPlansCache.filter(p => {
+                if (!keyword) return true;
+                const fd = p.formData || {};
+                return (p.projectName || '').toLowerCase().includes(keyword) ||
+                       (p.productName || '').toLowerCase().includes(keyword) ||
+                       (p.userName || '').toLowerCase().includes(keyword) ||
+                       (p.userEmail || '').toLowerCase().includes(keyword) ||
+                       (fd.f1_title || '').toLowerCase().includes(keyword) ||
+                       (fd.f1_purpose || '').toLowerCase().includes(keyword);
+            });
+
+            if (summaryEl) summaryEl.innerText = `共 ${filtered.length} 筆雲端紀錄`;
+
+            if (filtered.length === 0) {
+                listBody.innerHTML = `
+                    <div class="bg-white rounded-xl border border-dashed border-slate-300 p-10 text-center">
+                        <i class="fa-solid fa-cloud-sun text-4xl text-slate-300 mb-3"></i>
+                        <p class="text-sm font-bold text-slate-600">目前尚無符合條件的雲端企劃案紀錄</p>
+                        <p class="text-xs text-slate-400 mt-1">在主畫面填寫或用 AI 生成表單後，點擊「儲存至雲端」即可隨時保存並於此處查詢管理。</p>
+                    </div>`;
+                return;
+            }
+
+            listBody.innerHTML = filtered.map(p => {
+                const fd = p.formData || {};
+                const isCurrent = (p.planId === currentLoadedCloudPlanId);
+                const stepCount = [
+                    fd.f1_purpose || fd.f1_competitor,
+                    fd.f2_s || fd.f2_so || fd.f2_strat_goal,
+                    fd.f3_target || fd.f3_statement,
+                    fd.f4_product || fd.f4_a_act,
+                    fd.f5_why || fd.f5_what
+                ].filter(Boolean).length;
+
+                const timeDisplay = p.updatedAtFormatted || (p.updatedAt ? new Date(p.updatedAt).toLocaleString('zh-TW', { hour12: false }) : '-');
+
+                return `
+                    <div class="bg-white rounded-xl border ${isCurrent ? 'border-emerald-500 ring-2 ring-emerald-100' : 'border-slate-200'} p-4 shadow-sm hover:border-sky-400 transition flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="space-y-1.5 flex-1 overflow-hidden">
+                            <div class="flex flex-wrap items-center gap-2">
+                                ${isCurrent ? `<span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">目前編輯中</span>` : ''}
+                                <span class="text-sm font-black text-primary">${p.projectName || '(未命名企劃案)'}</span>
+                                <span class="text-[11px] bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full font-bold">已完成 ${stepCount}/5 表單</span>
+                            </div>
+                            <p class="text-xs text-slate-600 truncate">
+                                <strong class="text-secondary">商品/服務：</strong>${p.productName || '未填寫'}
+                            </p>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+                                <span><i class="fa-regular fa-clock mr-1"></i>最後更新：${timeDisplay}</span>
+                                <span><i class="fa-regular fa-user mr-1"></i>建立者：${p.userName || p.userEmail || '會員'}</span>
+                                ${fd.f1_title ? `<span class="text-slate-500 truncate max-w-xs"><i class="fa-solid fa-tag mr-1"></i>副標：${fd.f1_title}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 self-end md:self-center flex-shrink-0">
+                            <button onclick="loadPlanFromCloud('${p.planId}')" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-folder-open"></i> 載入此企劃
+                            </button>
+                            <button onclick="deletePlanFromCloud('${p.planId}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1" title="刪除此筆雲端紀錄">
+                                <i class="fa-solid fa-trash-can"></i> 刪除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        // 載入指定雲端企劃案至五大表單
+        window.loadPlanFromCloud = async function(planId) {
+            const target = cloudPlansCache.find(p => p.planId === planId);
+            if (!target) {
+                showToast("找不到該筆雲端企劃資料", "error");
+                return;
+            }
+
+            applyFormValuesToUI(target.formData || {});
+            const timeDisplay = target.updatedAtFormatted || (target.updatedAt ? new Date(target.updatedAt).toLocaleString('zh-TW', { hour12: false }) : '');
+            updateCurrentCloudStatusBar(target.planId, target.projectName, timeDisplay);
+
+            closeModal('modal-cloud-plans');
+            showToast(`已成功載入雲端企劃案《${target.projectName}》！`, "success");
+            await window.recordUserActivity(`載入雲端歷史企劃案：《${target.projectName}》`);
+        };
+
+        // 刪除單筆雲端企劃案
+        window.deletePlanFromCloud = async function(planId) {
+            const target = cloudPlansCache.find(p => p.planId === planId);
+            if (!target) return;
+
+            try {
+                await deleteDoc(doc(db, "tbsa_plans", planId));
+                if (currentLoadedCloudPlanId === planId) {
+                    updateCurrentCloudStatusBar(null);
+                }
+                showToast(`已從雲端刪除企劃案《${target.projectName}》`, "info");
+                await window.recordUserActivity(`刪除雲端企劃案：《${target.projectName}》`);
+                await window.loadCloudPlansList(false);
+            } catch (err) {
+                showToast("刪除失敗：" + err.message, "error");
+            }
+        };
+
+        // 一鍵清空自己所有的雲端企劃紀錄
+        window.deleteAllMyCloudPlans = async function() {
+            const user = auth.currentUser;
+            if (!user) return;
+            const myPlans = cloudPlansCache.filter(p => p.uid === user.uid);
+            if (myPlans.length === 0) {
+                showToast("目前沒有可清空的雲端企劃紀錄", "info");
+                return;
+            }
+
+            try {
+                for (const p of myPlans) {
+                    await deleteDoc(doc(db, "tbsa_plans", p.planId));
+                }
+                updateCurrentCloudStatusBar(null);
+                showToast(`已成功清空共 ${myPlans.length} 筆雲端企劃紀錄`, "info");
+                await window.recordUserActivity(`批次清空個人雲端企劃紀錄 (${myPlans.length} 筆)`);
+                await window.loadCloudPlansList(false);
+            } catch (err) {
+                showToast("批次刪除失敗：" + err.message, "error");
+            }
+        };
 
         // ==========================================
         // 管理者後台功能 (Admin Dashboard Functions)
